@@ -1,3 +1,5 @@
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
 import io.qameta.allure.testng.AllureTestNg;
 import jdk.jfr.Description;
@@ -11,6 +13,8 @@ import org.testng.annotations.Test;
 
 import java.util.Random;
 
+@Epic("Customer Management")
+@Feature("Add Customer Functionality")
 @Listeners({AllureTestNg.class})
 public class AddCustomerPageTest extends BaseTest {
 
@@ -22,8 +26,8 @@ public class AddCustomerPageTest extends BaseTest {
     @Test
     @Description("Проверка успешного добавления клиента")
     public void testSuccessfulCustomerCreation() {
-        String postCode = generatePostCode();
-        String firstName = generateFirstNameFromPostCode(postCode);
+        String postCode = addCustomerPage.generatePostCode();
+        String firstName = addCustomerPage.generateFirstNameFromPostCode(postCode);
 
         addCustomerPage.addCustomer(firstName, firstName, postCode);
 
@@ -52,7 +56,7 @@ public class AddCustomerPageTest extends BaseTest {
     @Test
     @Description("Проверка неудачного добавления клиента без имени")
     public void testWithoutFirstNameCustomerCreation() {
-        String postCode = generatePostCode();
+        String postCode = addCustomerPage.generatePostCode();
         String firstName = "";
 
         addCustomerPage.addCustomer(firstName, firstName, postCode);
@@ -62,11 +66,11 @@ public class AddCustomerPageTest extends BaseTest {
         });
     }
 
-    @Test(threadPoolSize = 3, invocationCount = 1)
+    @Test
     @Description("Проверка неудачного добавления клиента без фамилии")
     public void testWithoutLastNameCustomerCreation() {
-        String postCode = generatePostCode();
-        String firstName = generateFirstNameFromPostCode(postCode);
+        String postCode = addCustomerPage.generatePostCode();
+        String firstName = addCustomerPage.generateFirstNameFromPostCode(postCode);
 
         addCustomerPage.addCustomer(firstName, "", postCode);
 
@@ -75,7 +79,7 @@ public class AddCustomerPageTest extends BaseTest {
         });
     }
 
-    @Test(threadPoolSize = 3, invocationCount = 1)
+    @Test
     @Description("Проверка неудачного добавления клиента без почтового индекса")
     public void testWithoutFirstNameAndPostCodeCustomerCreation() {
         addCustomerPage.addCustomer("", "aaa", "");
@@ -85,27 +89,6 @@ public class AddCustomerPageTest extends BaseTest {
         });
     }
 
-    @Step("Генерация почтового PostCode")
-    private String generatePostCode() {
-        Random random = new Random();
-        StringBuilder postCode = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
-            postCode.append(random.nextInt(10));
-        }
-        return postCode.toString();
-    }
-
-    @Step("Генерация почтового FirstName")
-    private String generateFirstNameFromPostCode(String postCode) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < postCode.length(); i += 2) {
-            if (i + 2 > postCode.length()) break;
-            int index = Integer.parseInt(postCode.substring(i, i + 2)) % 26;
-            char letter = (char) ('a' + index);
-            result.append(letter);
-        }
-        return result.toString();
-    }
 
     @AfterMethod
     public void afterMethod() {

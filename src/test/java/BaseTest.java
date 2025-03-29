@@ -1,3 +1,4 @@
+import helpers.Config;
 import helpers.WaitHelper;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -6,6 +7,7 @@ import org.testng.annotations.BeforeMethod;
 import pages.AddCustomerPage;
 import pages.CustomersPage;
 import pages.MainPage;
+
 public class BaseTest {
     protected WebDriver driver;
     protected WaitHelper waitHelper;
@@ -18,8 +20,9 @@ public class BaseTest {
         System.setProperty("webdriver.chrome.driver", "selenium/chromedriver.exe");
         this.driver = new ChromeDriver();
         this.waitHelper = new WaitHelper(driver);
+        driver.manage().window().maximize();
 
-        this.driver.get("https://www.globalsqa.com/angularJs-protractor/BankingProject/#/manager");
+        this.driver.get(Config.getFullUrl() + "/#/manager");
         this.waitHelper.waitForPageLoadComplete(driver);
         this.mainPage = new MainPage(driver, waitHelper);
     }

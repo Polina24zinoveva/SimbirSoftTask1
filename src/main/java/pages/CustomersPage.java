@@ -1,6 +1,7 @@
 package pages;
 
 import helpers.WaitHelper;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -8,14 +9,13 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class CustomersPage {
-    private WebDriver driver;
     private final WaitHelper waitHelper;
 
     public CustomersPage(WebDriver driver, WaitHelper waitHelper) {
-        this.driver = driver;
         this.waitHelper = waitHelper;
         PageFactory.initElements(driver, this);
     }
@@ -31,8 +31,8 @@ public class CustomersPage {
     private List<WebElement> customerRows;
 
 
-    public void sortByFName(String direction) {
-        switch (direction){
+    public CustomersPage sortByFName(String direction) {
+        switch (direction) {
             case "asc":
                 waitHelper.waitForVisibility(sortByFName).click();
                 waitHelper.waitForVisibility(sortByFName).click();
@@ -41,17 +41,30 @@ public class CustomersPage {
                 waitHelper.waitForVisibility(sortByFName).click();
                 break;
         }
+        return this;
 
     }
 
+    @Step("Получение списка имен")
     public List<String> getFirstNamesList() {
         waitHelper.waitForVisibility(firstNameColumn);
         return firstNameColumn.stream().map(WebElement::getText).collect(Collectors.toList());
     }
 
-    public void deleteCustomer(String customerName) {
+
+    /**
+     * Удаляет customer по указанному имени.
+     *
+     * <p>Поиск осуществляется по точному совпадению имени в первой колонке таблицы.
+     * При успешном нахождении кликает кнопку удаления в соответствующей строке.</p>
+     *
+     * @param customerName имя customer для удаления (должно точно соответствовать значению в таблице)
+     * @return текущий экземпляр CustomersPage для поддержки паттерна Chain Of Invocations
+     * @throws RuntimeException если customer с указанным именем не найден
+     */
+    @Step("Удаление customer")
+    public CustomersPage deleteCustomer(String customerName) {
         if (customerName != null) {
-            // Находим строку с нужным именем
             WebElement customerRow = customerRows.stream()
                     .filter(row -> {
                         WebElement nameCell = row.findElement(By.xpath(".//td[1]"));
@@ -60,9 +73,29 @@ public class CustomersPage {
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Customer not found: " + customerName));
 
-            // Находим кнопку удаления в этой строке
             WebElement deleteButton = customerRow.findElement(By.xpath(".//button[contains(@ng-click, 'deleteCust')]"));
             waitHelper.waitForClickability(deleteButton).click();
         }
+        return this;
+    }
+
+    @Step("Выбор имени для удаления")
+    public String selectName(List<String> listNames) {
+        List<Integer> nameLengths = listNames.stream()
+                .map(String::length)
+                .collect(Collectors.toList());
+
+        double averageLength = nameLengths.stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+
+        Optional<String> name = listNames.stream()
+                .min((name1, name2) -> {
+                    int diff1 = Math.abs(name1.length() - (int) averageLength);
+                    int diff2 = Math.abs(name2.length() - (int) averageLength);
+                    return Integer.compare(diff1, diff2);
+                });
+        return name.orElse(null);
     }
 }
